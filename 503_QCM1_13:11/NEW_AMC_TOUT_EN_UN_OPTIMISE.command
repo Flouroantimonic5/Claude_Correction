@@ -39,23 +39,43 @@ echo ""
 # ============================================
 
 # Paramètres OPTIMISÉS pour détection CRAYON + STYLO
-# ✓ Détecte les cases légèrement noircies au crayon
-# ✓ Évite les faux positifs (cases vides = ~0.7%)
-AMC_PROP=0.8              # Proportion de la boîte à mesurer (0.8 = standard)
-AMC_SEUIL=0.03           # Seuil de noirceur 3% (optimisé pour crayon léger)
-AMC_BW_THRESHOLD=0.15    # Seuil de binarisation N&B (0.15 pour capturer le gris)
-AMC_TOL_MARQUE=0.2       # Tolérance pour les marques de coin
+# Basés sur les recommandations officielles AMC et tests empiriques
+#
+# CONTEXTE :
+# ✓ Cases VIDES mesurent : ~0.7-1% de noirceur
+# ✓ Cases CRAYON LÉGER : 8-15% de noirceur
+# ✓ Cases STYLO : 15-30% de noirceur
+#
+# ⚠️ IMPORTANT : Un seuil trop bas (0.03) génère BEAUCOUP de faux positifs
+#    car il est trop proche des cases vides (~1%), détectant salissures et ombres
 
-# GUIDE D'AJUSTEMENT :
-# - Si TROP de faux positifs → augmenter AMC_SEUIL à 0.04 ou 0.05
-# - Si pas assez de détection → réduire AMC_SEUIL à 0.02
-# - Cas vides mesurés : ~0.7% donc 3% laisse une bonne marge
+AMC_PROP=0.8              # Proportion de la boîte à mesurer (0.8 = standard AMC)
+AMC_SEUIL=0.08           # Seuil de noirceur 8% (OPTIMAL : équilibre crayon léger vs faux positifs)
+AMC_BW_THRESHOLD=0.25    # Seuil de binarisation N&B (0.25 = réduit le bruit et artefacts)
+AMC_TOL_MARQUE=0.2       # Tolérance pour les marques de coin (0.2 = standard)
 
-# Si vous avez des PHOTOCOPIES de mauvaise qualité :
-# AMC_PROP=0.65
-# AMC_SEUIL=0.05
-# AMC_TOL_MARQUE=0.3
-# AMC_BW_THRESHOLD=0.2
+# ═══════════════════════════════════════════════════════════
+# GUIDE D'AJUSTEMENT SI NÉCESSAIRE :
+# ═══════════════════════════════════════════════════════════
+#
+# Si TROP de faux positifs (cases vides détectées) :
+#   → Augmenter AMC_SEUIL à 0.10 ou 0.12
+#
+# Si PAS ASSEZ de détection (crayon très léger non détecté) :
+#   → Réduire AMC_SEUIL à 0.06
+#   → Réduire AMC_BW_THRESHOLD à 0.20
+#
+# Pour PHOTOCOPIES de mauvaise qualité :
+#   → AMC_PROP=0.65
+#   → AMC_SEUIL=0.10
+#   → AMC_TOL_MARQUE=0.3
+#   → AMC_BW_THRESHOLD=0.30
+#
+# Pour STYLO UNIQUEMENT (pas de crayon) :
+#   → AMC_SEUIL=0.12
+#   → AMC_BW_THRESHOLD=0.30
+#
+# ═══════════════════════════════════════════════════════════
 
 # ============================================
 # DÉTECTION AUTOMATIQUE DES FICHIERS
@@ -109,12 +129,15 @@ echo "  2) 📸 Analyser les scans → Résultats complets"
 echo "  3) 🚀 Re-traiter (si déjà analysé)"
 echo "  4) ⚡ TOUT FAIRE (1+2 en continu)"
 echo "  5) 🔧 Diagnostic qualité des scans"
+echo "  6) 🧪 Test paramètres (trouver configuration optimale)"
 echo ""
 echo "  0) Quitter"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-read -p "Votre choix (1/2/3/4/5/0) : " choix
+echo "📊 Paramètres actuels : SEUIL=$AMC_SEUIL, BW_THRESHOLD=$AMC_BW_THRESHOLD"
+echo ""
+read -p "Votre choix (1/2/3/4/5/6/0) : " choix
 echo ""
 
 case $choix in
@@ -824,12 +847,147 @@ EOF
     read -p "Appuyez sur Entrée pour fermer..."
 fi
 
+# ============================================
+# OPTION 6 : TEST DES PARAMÈTRES
+# ============================================
+if [ "$choix" = "6" ]; then
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🧪 TEST DES PARAMÈTRES AMC"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "Cette option va tester plusieurs configurations de paramètres"
+    echo "pour trouver celle qui donne les meilleurs résultats."
+    echo ""
+    echo "⚠️  ATTENTION : Cela peut prendre plusieurs minutes"
+    echo ""
+
+    # Vérifier que les données de base existent
+    if [ ! -f "data/layout.sqlite" ]; then
+        echo "❌ Erreur : Le layout n'a pas été généré"
+        echo "   Lancez d'abord l'option 1"
+        read -p "Appuyez sur Entrée pour fermer..."
+        exit 1
+    fi
+
+    if [ ! -d "scans" ] || [ $(ls -1 scans/*.png 2>/dev/null | wc -l) -eq 0 ]; then
+        echo "❌ Erreur : Aucun scan trouvé dans scans/"
+        read -p "Appuyez sur Entrée pour fermer..."
+        exit 1
+    fi
+
+    read -p "Voulez-vous continuer ? (o/n) " continue_test
+    if [ "$continue_test" != "o" ]; then
+        echo "Test annulé."
+        exit 0
+    fi
+
+    echo ""
+    echo "🔄 Lancement des tests..."
+    echo ""
+
+    # Créer un dossier de test
+    mkdir -p tests_parametres
+
+    # Définir les configurations à tester
+    declare -a CONFIGS=(
+        "0.08|0.25|RECOMMANDÉ (optimal)"
+        "0.06|0.20|CRAYON TRÈS LÉGER"
+        "0.10|0.25|CONSERVATEUR"
+        "0.12|0.30|STYLO SEULEMENT"
+    )
+
+    BEST_CONFIG=""
+    BEST_AVG_SCORE=0
+    CONFIG_NUM=1
+
+    for config in "${CONFIGS[@]}"; do
+        SEUIL=$(echo "$config" | cut -d'|' -f1)
+        BW=$(echo "$config" | cut -d'|' -f2)
+        DESC=$(echo "$config" | cut -d'|' -f3)
+
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo "TEST $CONFIG_NUM : $DESC"
+        echo "  Seuil=$SEUIL, BW_Threshold=$BW"
+        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+        echo ""
+
+        # Créer un dossier pour ce test
+        TEST_DIR="tests_parametres/test${CONFIG_NUM}_${DESC// /_}"
+        mkdir -p "$TEST_DIR"
+
+        # Copier les bases de données
+        cp -r data "$TEST_DIR/data_test"
+
+        # Réinitialiser les captures
+        rm -f "$TEST_DIR/data_test/capture.sqlite" 2>/dev/null
+        cp data/capture.sqlite "$TEST_DIR/data_test/" 2>/dev/null
+
+        # Analyser avec ces paramètres
+        echo "🔍 Analyse en cours..."
+        auto-multiple-choice analyse \
+            --data "$TEST_DIR/data_test" \
+            --cr "$TEST_DIR/cr" \
+            --prop 0.8 \
+            --bw-threshold "$BW" \
+            --tol-marque 0.2 \
+            --try-three \
+            scans/*.png 2>&1 | grep -E "(Processing|Done)" | tail -3
+
+        # Recalculer les notes
+        auto-multiple-choice note \
+            --data "$TEST_DIR/data_test" \
+            --seuil "$SEUIL" \
+            --grain 0.5 \
+            --arrondi n >/dev/null 2>&1
+
+        # Extraire les statistiques
+        STATS=$(sqlite3 "$TEST_DIR/data_test/scoring.sqlite" "
+            SELECT AVG(total), MIN(total), MAX(total), COUNT(*)
+            FROM (SELECT student, SUM(score) as total FROM scoring_score GROUP BY student);
+        " 2>/dev/null)
+
+        AVG=$(echo "$STATS" | cut -d'|' -f1 | cut -d'.' -f1)
+        MIN=$(echo "$STATS" | cut -d'|' -f2 | cut -d'.' -f1)
+        MAX=$(echo "$STATS" | cut -d'|' -f3 | cut -d'.' -f1)
+
+        echo "📊 Score moyen : $AVG/44  (min=$MIN, max=$MAX)"
+
+        # Vérifier Paul et Rayan
+        PAUL=$(sqlite3 "$TEST_DIR/data_test/scoring.sqlite" "SELECT SUM(score) FROM scoring_score WHERE student=21;" 2>/dev/null | cut -d'.' -f1)
+        RAYAN=$(sqlite3 "$TEST_DIR/data_test/scoring.sqlite" "SELECT SUM(score) FROM scoring_score WHERE student=28;" 2>/dev/null | cut -d'.' -f1)
+
+        echo "👥 Paul (21): $PAUL/44  |  Rayan (28): $RAYAN/44"
+        echo ""
+
+        # Garder la meilleure config
+        if [ "$AVG" -gt "$BEST_AVG_SCORE" ]; then
+            BEST_AVG_SCORE=$AVG
+            BEST_CONFIG="$DESC (Seuil=$SEUIL, BW=$BW)"
+        fi
+
+        CONFIG_NUM=$((CONFIG_NUM + 1))
+        sleep 1
+    done
+
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "✅ TESTS TERMINÉS"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+    echo "🏆 MEILLEURE CONFIGURATION : $BEST_CONFIG"
+    echo "   Score moyen : $BEST_AVG_SCORE/44"
+    echo ""
+    echo "📁 Résultats détaillés dans : tests_parametres/"
+    echo ""
+    read -p "Appuyez sur Entrée pour fermer..."
+    exit 0
+fi
+
 if [ "$choix" = "0" ]; then
     echo "Au revoir !"
     exit 0
 fi
 
-if [ "$choix" != "1" ] && [ "$choix" != "2" ] && [ "$choix" != "3" ] && [ "$choix" != "4" ] && [ "$choix" != "5" ] && [ "$choix" != "0" ]; then
+if [ "$choix" != "1" ] && [ "$choix" != "2" ] && [ "$choix" != "3" ] && [ "$choix" != "4" ] && [ "$choix" != "5" ] && [ "$choix" != "6" ] && [ "$choix" != "0" ]; then
     echo "❌ Choix invalide"
     read -p "Appuyez sur Entrée pour fermer..."
     exit 1

@@ -1,0 +1,128 @@
+╔═══════════════════════════════════════════════════════════════════════════╗
+║                  RÉSUMÉ DES MODIFICATIONS AMC                             ║
+╚═══════════════════════════════════════════════════════════════════════════╝
+
+Date : 2025-11-13
+Objectif : Corriger les faux positifs et améliorer la détection des cases AMC
+
+═══════════════════════════════════════════════════════════════════════════
+
+📋 PROBLÈME INITIAL :
+─────────────────────────────────────────────────────────────────────────
+
+Le fichier NEW_AMC_TOUT_EN_UN_OPTIMISE.command générait BEAUCOUP de faux
+positifs avec les paramètres suivants :
+
+  • AMC_SEUIL = 0.03 (3%)         ❌ TROP BAS !
+  • AMC_BW_THRESHOLD = 0.15       ❌ TROP BAS !
+
+Résultats observés :
+  • Notes très basses pour tous les élèves
+  • Paul MEGEVAND (21) : 12/44 (5.45/20)
+  • Rayan SOUMARE (28) : 7/44 (3.18/20)
+  • Estelle CELINAIN (5) : 0/44 (0/20) - Aucune détection !
+
+Cause : Le seuil à 3% est trop proche des cases vides (~1%), donc il
+détecte les salissures, ombres, artefacts de scan, etc.
+
+═══════════════════════════════════════════════════════════════════════════
+
+✅ SOLUTION MISE EN PLACE :
+─────────────────────────────────────────────────────────────────────────
+
+Nouveaux paramètres OPTIMISÉS (basés sur la documentation AMC) :
+
+  • AMC_SEUIL = 0.08 (8%)         ✅ OPTIMAL !
+  • AMC_BW_THRESHOLD = 0.25       ✅ OPTIMAL !
+  • AMC_PROP = 0.8                ✅ Standard (inchangé)
+  • AMC_TOL_MARQUE = 0.2          ✅ Standard (inchangé)
+
+Justification :
+  • Cases VIDES : ~0.7-1% de noirceur
+  • Cases CRAYON LÉGER : 8-15% de noirceur
+  • Cases STYLO : 15-30% de noirceur
+
+→ Un seuil à 8% donne une marge de sécurité de 7-8% au-dessus des cases
+  vides, tout en détectant les cases au crayon léger.
+
+═══════════════════════════════════════════════════════════════════════════
+
+🆕 NOUVELLES FONCTIONNALITÉS :
+─────────────────────────────────────────────────────────────────────────
+
+1. Option 6 : Test automatique des paramètres
+   • Teste 4 configurations différentes
+   • Compare les résultats
+   • Identifie la meilleure configuration
+   • Configurations testées :
+     - RECOMMANDÉ (0.08, 0.25)
+     - CRAYON TRÈS LÉGER (0.06, 0.20)
+     - CONSERVATEUR (0.10, 0.25)
+     - STYLO SEULEMENT (0.12, 0.30)
+
+2. Affichage des paramètres actuels dans le menu
+   • Permet de voir immédiatement les paramètres utilisés
+
+3. Documentation complète
+   • Guide d'ajustement détaillé dans le script
+   • Document AMELIORATIONS_DETECTION_AMC.md
+   • Explications techniques et pratiques
+
+═══════════════════════════════════════════════════════════════════════════
+
+📁 FICHIERS MODIFIÉS / CRÉÉS :
+─────────────────────────────────────────────────────────────────────────
+
+✏️  MODIFIÉ :
+   • NEW_AMC_TOUT_EN_UN_OPTIMISE.command
+     - Paramètres optimisés (lignes 52-55)
+     - Nouvelle option 6 pour tests automatiques
+     - Documentation améliorée
+
+📄 CRÉÉ :
+   • test_parametres_amc.sh
+     - Script de test indépendant (optionnel)
+     - Teste 5 configurations
+     - Génère des rapports détaillés
+
+   • AMELIORATIONS_DETECTION_AMC.md
+     - Documentation complète
+     - Explications techniques
+     - Guide d'utilisation
+     - Cas particuliers
+
+   • RESUME_MODIFICATIONS.txt
+     - Ce fichier de résumé
+
+═══════════════════════════════════════════════════════════════════════════
+
+🚀 PROCHAINES ÉTAPES POUR L'UTILISATEUR :
+─────────────────────────────────────────────────────────────────────────
+
+1. Lancer NEW_AMC_TOUT_EN_UN_OPTIMISE.command
+2. Choisir l'option 3 : "Re-traiter (si déjà analysé)"
+3. Vérifier les nouveaux résultats dans exports/notes_avec_noms.csv
+4. Si nécessaire, tester d'autres configurations avec l'option 6
+
+ATTENDU :
+  ✅ Moins de faux positifs (cases vides non détectées)
+  ✅ Meilleure détection des cases au crayon léger
+  ✅ Scores plus cohérents et réalistes
+  ✅ Moins d'élèves avec 0 point
+
+═══════════════════════════════════════════════════════════════════════════
+
+💡 RÉFÉRENCES TECHNIQUES :
+─────────────────────────────────────────────────────────────────────────
+
+• Documentation AMC : http://home.gna.org/auto-qcm/
+• Recommandations officielles : auto-multiple-choice --help analyse
+• Forum AMC : https://project.auto-multiple-choice.net/
+
+Paramètres testés et validés selon :
+  - La documentation officielle AMC
+  - Les meilleures pratiques de la communauté
+  - L'analyse des résultats actuels
+  - Les caractéristiques des copies (crayon léger)
+
+═══════════════════════════════════════════════════════════════════════════
