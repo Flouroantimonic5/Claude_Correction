@@ -1,0 +1,36 @@
+═══════════════════════════════════════════════════════════
+RAPPORT AMC - VERSION OPTIMISÉE
+═══════════════════════════════════════════════════════════
+
+Date : 2025-11-13 12:27:58
+Projet : 503_QCM1_13:11
+Fichier : qcm_5eme.tex
+
+✅ RÉSULTATS :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Élèves dans CSV : 30
+Copies analysées : 30
+PDFs générés : 30
+
+⚙️  PARAMÈTRES UTILISÉS :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Proportion boîte (--prop) : 0.8
+Seuil noirceur (--seuil) : 0.03
+Seuil N&B (--bw-threshold) : 0.15
+Tolérance marques (--tol-marque) : 0.2
+
+📂 FICHIERS GÉNÉRÉS :
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+✓ exports/notes_avec_noms.csv
+  → Fichier Excel avec noms et notes détaillées
+
+✓ exports/copies_individuelles/
+  → 30 PDFs annotés avec corrections
+
+✓ cr/debug/
+  → Images de diagnostic pour vérification
+
+═══════════════════════════════════════════════════════════

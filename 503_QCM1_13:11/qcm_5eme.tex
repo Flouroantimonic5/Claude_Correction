@@ -1,0 +1,628 @@
+\documentclass[a4paper,10pt]{article}
+
+% ================= PACKAGES =================
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage[bloc]{automultiplechoice}
+\usepackage{geometry}
+\usepackage{csvsimple}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\usepackage{multicol}
+\usepackage{tikz}
+\usetikzlibrary{calc}
+\usepackage{enumitem}
+\usepackage{textcomp}
+\usepackage{graphicx}
+\usepackage{array}
+
+% ================= MISE EN PAGE ==============
+\geometry{left=1.5cm,right=1.5cm,top=2.2cm,bottom=1.8cm}
+\newcommand{\qfontsize}{\footnotesize}
+\setlength{\parindent}{0pt}
+\setlength{\columnsep}{1cm}
+
+% ================= OPTIONS & BARÈME AMC =====
+\baremeDefautS{b=1,m=0}
+\AMCrandomseed{12345} % mélange reproductible des questions
+
+% Compteur pour générer un identifiant élève simple
+\newcounter{studentidx}
+
+% ================= TikZ ======================
+\tikzset{
+  pt/.style = {circle, fill=black, inner sep=1.6pt},
+  seg/.style = {thick},
+}
+
+% ============ ENTÊTE ==========
+\newcommand{\StudentHeader}[2]{%
+  \vspace{1mm}
+  \noindent\fbox{\parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}{%
+    \textbf{Élève :} {\bfseries\MakeUppercase{#1}} \hfill \textbf{ID :} {\small\texttt{#2}}
+  }}%
+  \vspace{2mm}
+}
+
+\newcommand{\ExamTitle}{%
+  \begin{center}
+    {\Large\bfseries CONTRÔLE DE MATHÉMATIQUES --- 5\textsuperscript{e}}\\[2mm]
+    {\large Triangles, Fractions et Angles}
+  \end{center}
+  \vspace{2mm}
+  \noindent\fbox{\parbox{\dimexpr\textwidth-2\fboxsep-2\fboxrule\relax}{%
+  \textbf{CONSIGNES :}
+  Pour les questions 1 à 45 (QCM), cochez la bonne réponse sur votre copie.
+  Un travail de recherche au brouillon est attendu.
+  Durée : 1 heure.
+  }}
+  \vspace{3mm}
+}
+
+% ============ CONTENU DU QCM ==========
+\newcommand{\ExamBody}{%
+\begin{center}
+\textbf{\large Questionnaire à Choix Multiples}
+\end{center}
+
+\begin{multicols}{2}
+\qfontsize
+\melangegroupe{qcm}
+\restituegroupe{qcm}
+\end{multicols}
+}
+% ======== DÉFINITION DES 45 QUESTIONS QCM ========
+
+% ========== QUESTIONS SUR L'INÉGALITÉ TRIANGULAIRE ==========
+\element{qcm}{
+\begin{question}{q01}
+Peut-on construire un triangle avec les longueurs : 8, 10 et 20 ?
+\begin{choiceshoriz}
+  \wrongchoice{Oui}
+  \correctchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q02}
+Peut-on construire un triangle avec les longueurs : 10, 18 et 12 ?
+\begin{choiceshoriz}
+  \correctchoice{Oui}
+  \wrongchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q03}
+Peut-on construire un triangle avec les longueurs : 18, 7 et 10 ?
+\begin{choiceshoriz}
+  \wrongchoice{Oui}
+  \correctchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q04}
+Peut-on construire un triangle avec les longueurs : 6, 5 et 8 ?
+\begin{choiceshoriz}
+  \correctchoice{Oui}
+  \wrongchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q05}
+Peut-on construire un triangle avec les longueurs : 6, 10 et 8 ?
+\begin{choiceshoriz}
+  \correctchoice{Oui}
+  \wrongchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q06}
+Peut-on construire un triangle avec les longueurs : 11, 7 et 21 ?
+\begin{choiceshoriz}
+  \wrongchoice{Oui}
+  \correctchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q07}
+Peut-on construire un triangle avec les longueurs : 9, 3 et 10 ?
+\begin{choiceshoriz}
+  \correctchoice{Oui}
+  \wrongchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q08}
+Peut-on construire un triangle avec les longueurs : 11, 1 et 12 ?
+\begin{choiceshoriz}
+  \wrongchoice{Oui}
+  \correctchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q09}
+Peut-on construire un triangle avec les longueurs : 9, 12 et 22 ?
+\begin{choiceshoriz}
+  \wrongchoice{Oui}
+  \correctchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q10}
+Peut-on construire un triangle avec les longueurs : 6, 6 et 3 ?
+\begin{choiceshoriz}
+  \correctchoice{Oui}
+  \wrongchoice{Non}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q11}
+Deux côtés d'un triangle mesurent 10 et 7. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \wrongchoice{5 $<$ x $<$ 16}
+  \wrongchoice{4 $<$ x $<$ 14}
+  \wrongchoice{4 $<$ x $<$ 17}
+  \correctchoice{3 $<$ x $<$ 17}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q12}
+Deux côtés d'un triangle mesurent 12 et 12. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \wrongchoice{1 $<$ x $<$ 24}
+  \wrongchoice{4 $<$ x $<$ 24}
+  \wrongchoice{4 $<$ x $<$ 23}
+  \correctchoice{0 $<$ x $<$ 24}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q13}
+Deux côtés d'un triangle mesurent 8 et 12. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \wrongchoice{4 $<$ x $<$ 16}
+  \wrongchoice{5 $<$ x $<$ 20}
+  \wrongchoice{4 $<$ x $<$ 17}
+  \correctchoice{4 $<$ x $<$ 20}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q14}
+Deux côtés d'un triangle mesurent 12 et 7. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \wrongchoice{5 $<$ x $<$ 18}
+  \wrongchoice{6 $<$ x $<$ 19}
+  \correctchoice{5 $<$ x $<$ 19}
+  \wrongchoice{7 $<$ x $<$ 19}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q15}
+Deux côtés d'un triangle mesurent 10 et 6. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \correctchoice{4 $<$ x $<$ 16}
+  \wrongchoice{5 $<$ x $<$ 15}
+  \wrongchoice{6 $<$ x $<$ 15}
+  \wrongchoice{4 $<$ x $<$ 14}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q16}
+Deux côtés d'un triangle mesurent 7 et 11. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \wrongchoice{5 $<$ x $<$ 18}
+  \correctchoice{4 $<$ x $<$ 18}
+  \wrongchoice{7 $<$ x $<$ 18}
+  \wrongchoice{5 $<$ x $<$ 17}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q17}
+Deux côtés d'un triangle mesurent 9 et 7. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \wrongchoice{6 $<$ x $<$ 14}
+  \correctchoice{2 $<$ x $<$ 16}
+  \wrongchoice{2 $<$ x $<$ 14}
+  \wrongchoice{3 $<$ x $<$ 14}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q18}
+Deux côtés d'un triangle mesurent 9 et 6. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \wrongchoice{5 $<$ x $<$ 14}
+  \correctchoice{3 $<$ x $<$ 15}
+  \wrongchoice{3 $<$ x $<$ 14}
+  \wrongchoice{4 $<$ x $<$ 14}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q19}
+Deux côtés d'un triangle mesurent 10 et 8. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \correctchoice{2 $<$ x $<$ 18}
+  \wrongchoice{3 $<$ x $<$ 17}
+  \wrongchoice{2 $<$ x $<$ 14}
+  \wrongchoice{2 $<$ x $<$ 17}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20}
+Deux côtés d'un triangle mesurent 8 et 9. Quel intervalle pour le troisième côté ?
+\begin{choiceshoriz}
+  \correctchoice{1 $<$ x $<$ 17}
+  \wrongchoice{1 $<$ x $<$ 13}
+  \wrongchoice{1 $<$ x $<$ 15}
+  \wrongchoice{2 $<$ x $<$ 15}
+\end{choiceshoriz}
+\end{question}
+}
+
+% ========== QUESTIONS SUR TYPES DE NOMBRES ET EXERCICES ==========
+\element{qcm}{
+\begin{question}{q20b}
+M, N, P sont des points tels que NP = 4 cm, MP = 10 cm et N est un point de [MP]. Quelle est la longueur MN ?
+\begin{choiceshoriz}
+  \wrongchoice{14 cm}
+  \correctchoice{6 cm}
+  \wrongchoice{4 cm}
+  \wrongchoice{10 cm}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20c}
+Deux amis sont au bord d'un canal entre deux écluses distantes de 1 km. Malo : "Je suis à 600 m de l'écluse 5 et à 400 m de l'écluse 6." Nabil : "Je suis à 300 m de l'écluse 6 et à 800 m de l'écluse 5." Qui se trompe ?
+\begin{choices}
+  \wrongchoice{Malo se trompe}
+  \correctchoice{Nabil se trompe}
+  \wrongchoice{Les deux se trompent}
+  \wrongchoice{Aucun ne se trompe}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20d}
+Segment [AB] de longueur 8 cm. Laura : "Je ne peux pas construire de point E tel que AE = 3,4 cm et BE = 5 cm." Sofiane : "Tu te trompes, il y a même deux points E possibles." Qui a raison ?
+\begin{choices}
+  \wrongchoice{Laura a raison, c'est impossible}
+  \correctchoice{Sofiane a raison, car 3,4 + 5 = 8,4 $>$ 8 et |5 - 3,4| = 1,6 $<$ 8}
+  \wrongchoice{Aucun n'a raison}
+  \wrongchoice{Les deux ont tort}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20e}
+Un triangle a trois côtés a, b, c avec : $a + b > c$, $a + c > b$ et $b + c > a$. Ce triangle est :
+\begin{choices}
+  \correctchoice{Constructible}
+  \wrongchoice{Impossible à construire}
+  \wrongchoice{Forcément rectangle}
+  \wrongchoice{Forcément isocèle}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20f}
+Quel type de nombre est 0,25 ?
+\begin{choices}
+  \wrongchoice{Un nombre entier seulement}
+  \wrongchoice{Un nombre rationnel non décimal}
+  \correctchoice{Un nombre décimal et rationnel}
+  \wrongchoice{Ni décimal ni rationnel}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20g}
+Quel type de nombre est $\frac{12}{4}$ ?
+\begin{choices}
+  \correctchoice{Un nombre entier (donc aussi décimal et rationnel)}
+  \wrongchoice{Un nombre décimal mais pas entier}
+  \wrongchoice{Un nombre rationnel non décimal}
+  \wrongchoice{Ni décimal ni rationnel}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20h}
+Un triangle a trois côtés a = 5, b = 5, c = 7 avec : $a + b > c$ (car $5 + 5 = 10 > 7$). Ce triangle est :
+\begin{choices}
+  \wrongchoice{Rectangle}
+  \correctchoice{Isocèle}
+  \wrongchoice{Équilatéral}
+  \wrongchoice{Impossible}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20i}
+Un triangle a trois côtés a = 6, b = 6, c = 6 avec : $a = b = c$. Ce triangle est :
+\begin{choices}
+  \wrongchoice{Isocèle seulement}
+  \wrongchoice{Rectangle}
+  \correctchoice{Équilatéral}
+  \wrongchoice{Quelconque}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q20j}
+Un triangle a trois côtés a = 3, b = 4, c = 5 avec : $3^2 + 4^2 = 9 + 16 = 25 = 5^2$. Ce triangle est :
+\begin{choices}
+  \correctchoice{Rectangle}
+  \wrongchoice{Isocèle}
+  \wrongchoice{Équilatéral}
+  \wrongchoice{Obtusangle}
+\end{choices}
+\end{question}
+}
+
+% ========== QUESTIONS PIÈGES SUR LES DROITES REMARQUABLES ==========
+\element{qcm}{
+\begin{question}{q21}
+Dans un triangle isocèle ABC (AB = AC), la médiane issue de A :
+\begin{choices}
+  \correctchoice{Est aussi la hauteur et la médiatrice du côté [BC]}
+  \wrongchoice{Est aussi la hauteur mais pas la médiatrice du côté [BC]}
+  \wrongchoice{Est aussi la médiatrice mais pas la hauteur du côté [BC]}
+  \wrongchoice{N'est ni la hauteur ni la médiatrice du côté [BC]}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q22}
+La médiatrice d'un côté d'un triangle passe toujours par :
+\begin{choices}
+  \wrongchoice{Le sommet opposé à ce côté}
+  \wrongchoice{Le centre de gravité du triangle}
+  \wrongchoice{L'orthocentre du triangle}
+  \correctchoice{Le milieu de ce côté}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q23}
+Quel type de nombre est $\frac{7}{4}$ ?
+\begin{choices}
+  \wrongchoice{Un nombre entier}
+  \wrongchoice{Un nombre décimal mais pas rationnel}
+  \correctchoice{Un nombre rationnel et décimal}
+  \wrongchoice{Ni rationnel ni décimal}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q24}
+Dans un triangle équilatéral, combien y a-t-il de droites remarquables différentes ?
+\begin{choiceshoriz}
+  \wrongchoice{12}
+  \wrongchoice{6}
+  \correctchoice{3}
+  \wrongchoice{1}
+\end{choiceshoriz}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q25}
+Quel type de nombre est $\frac{5}{3}$ ?
+\begin{choices}
+  \wrongchoice{Un nombre entier}
+  \wrongchoice{Un nombre décimal}
+  \correctchoice{Un nombre rationnel non décimal}
+  \wrongchoice{Ni rationnel ni décimal}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q26}
+La médiane d'un triangle :
+\begin{choices}
+  \wrongchoice{Est toujours perpendiculaire au côté opposé}
+  \wrongchoice{Partage l'angle en deux angles égaux}
+  \wrongchoice{Passe toujours par le milieu du côté et forme un angle droit}
+  \correctchoice{Relie un sommet au milieu du côté opposé}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q27}
+Dans un triangle ABC rectangle en A, la hauteur issue de A :
+\begin{choices}
+  \wrongchoice{Est à l'extérieur du triangle}
+  \wrongchoice{Coïncide avec la médiane issue de A}
+  \correctchoice{Coupe le côté [BC]}
+  \wrongchoice{Coïncide avec le côté [AB]}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q28}
+Le centre de gravité d'un triangle se trouve :
+\begin{choices}
+  \wrongchoice{Au milieu de chaque médiane}
+  \correctchoice{Aux deux tiers de chaque médiane à partir du sommet}
+  \wrongchoice{Au tiers de chaque médiane à partir du sommet}
+  \wrongchoice{À l'extrémité de chaque médiane}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q29}
+Dans un triangle quelconque, médiane et médiatrice sont confondues :
+\begin{choices}
+  \wrongchoice{Toujours}
+  \correctchoice{Jamais, sauf dans un triangle isocèle pour certains côtés}
+  \wrongchoice{Seulement dans un triangle rectangle}
+  \wrongchoice{Seulement dans un triangle équilatéral}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q30}
+Un point est sur la médiatrice d'un segment [AB] si et seulement si :
+\begin{choices}
+  \wrongchoice{Il est à égale distance de A et du milieu de [AB]}
+  \correctchoice{Il est à égale distance de A et de B}
+  \wrongchoice{Il forme un angle droit avec [AB]}
+  \wrongchoice{Il divise [AB] en deux segments égaux}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q31}
+La bissectrice d'un angle divise cet angle en :
+\begin{choices}
+  \wrongchoice{Deux angles dont la somme vaut 90\textdegree}
+  \wrongchoice{Deux angles complémentaires}
+  \correctchoice{Deux angles de même mesure}
+  \wrongchoice{Deux angles droits}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q32}
+Un triangle a trois côtés de longueurs a, b et c avec : $a + b > c$, $a + c > b$ et $b + c = a$. Ce triangle est :
+\begin{choices}
+  \wrongchoice{Impossible à construire}
+  \wrongchoice{Un triangle quelconque}
+  \wrongchoice{Un triangle rectangle}
+  \correctchoice{Un triangle plat (les trois points sont alignés)}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q33}
+Tous les points d'une médiatrice d'un segment [AB] sont :
+\begin{choices}
+  \wrongchoice{Alignés avec A et B}
+  \wrongchoice{À l'intérieur du segment [AB]}
+  \correctchoice{Équidistants de A et de B}
+  \wrongchoice{Au milieu de [AB]}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q34}
+Dans un triangle ABC, si M est le milieu de [BC], alors :
+\begin{choices}
+  \wrongchoice{La droite (AM) est forcément perpendiculaire à (BC)}
+  \wrongchoice{La droite (AM) est la médiatrice de [BC]}
+  \correctchoice{Le segment [AM] est une médiane du triangle}
+  \wrongchoice{La droite (AM) est une hauteur du triangle}
+\end{choices}
+\end{question}
+}
+
+\element{qcm}{
+\begin{question}{q35}
+Hauteur et médiane issues d'un même sommet sont confondues :
+\begin{choices}
+  \wrongchoice{Dans tout triangle}
+  \wrongchoice{Uniquement dans un triangle rectangle}
+  \wrongchoice{Uniquement dans un triangle équilatéral}
+  \correctchoice{Dans un triangle isocèle, pour le sommet principal uniquement}
+\end{choices}
+\end{question}
+}
+
+\begin{document}
+
+% ---------- Génération des copies nominatives depuis students.csv ----------
+% CSV attendu (UTF-8) avec les entêtes : nom, prenom, numero
+\IfFileExists{students.csv}{%
+\csvreader[separator=comma, head to column names]{students.csv}{}{%
+    % Capturer les valeurs avec edef pour expansion immédiate
+    \edef\StudentNom{\nom}%
+    \edef\StudentPrenom{\prenom}%
+    \edef\StudentNumero{\numero}%
+    % Code = 1000 + numéro du CSV
+    \edef\StudentCode{\number\numexpr1000+\StudentNumero\relax}%
+
+    % Générer la copie avec association
+    \onecopy{1}{%
+      % Association AMC avec ID numérique (clé du CSV)
+      \AMCassociation[\StudentNom-\StudentPrenom]{etu}{\StudentNumero}
+
+      \ExamTitle
+      % En-tête + identifiant
+      \StudentHeader{\StudentPrenom\ \StudentNom}{\StudentCode}
+
+      % Corps de l'examen (QCM + exercice)
+      \ExamBody
+
+      \newpage
+    }%
+  }%
+}{%
+  % Fallback : un sujet nominatif d'exemple si aucun CSV n'est présent
+  \def\StudentNom{NOM}\def\StudentPrenom{PRENOM}\def\StudentCode{1001}%
+  \onecopy{1}{%
+    \AMCassociation[\StudentNom-\StudentPrenom]{etu}{1}
+    \ExamTitle
+    \StudentHeader{\StudentPrenom\ \StudentNom}{\StudentCode}
+    \ExamBody
+    \newpage
+  }%
+}
+
+\end{document}
