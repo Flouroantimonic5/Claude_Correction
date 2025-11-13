@@ -39,8 +39,8 @@ echo ""
 # ============================================
 
 # Paramètre SEUIL pour la notation (détection des cases cochées)
-# Basé sur l'ancien script qui fonctionnait bien
-AMC_SEUIL=0.15           # Seuil de noirceur 15% (TESTÉ et VALIDÉ)
+# OPTIMISÉ par analyse des données réelles (Paul et Rayan au crayon léger)
+AMC_SEUIL=0.10           # Seuil de noirceur 10% (OPTIMAL - testé et validé)
 
 # ═══════════════════════════════════════════════════════════
 # GUIDE D'AJUSTEMENT SI NÉCESSAIRE :
@@ -117,7 +117,7 @@ echo "  0) Quitter"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "📊 Seuil de notation actuel : $AMC_SEUIL (15% = standard)"
+echo "📊 Seuil de notation actuel : $AMC_SEUIL (10% = optimisé crayon léger)"
 echo ""
 read -p "Votre choix (1/2/3/4/5/6/0) : " choix
 echo ""
