@@ -38,42 +38,24 @@ echo ""
 # CONFIGURATION DES PARAMÈTRES AMC
 # ============================================
 
-# Paramètres OPTIMISÉS pour détection CRAYON + STYLO
-# Basés sur les recommandations officielles AMC et tests empiriques
-#
-# CONTEXTE :
-# ✓ Cases VIDES mesurent : ~0.7-1% de noirceur
-# ✓ Cases CRAYON LÉGER : 8-15% de noirceur
-# ✓ Cases STYLO : 15-30% de noirceur
-#
-# ⚠️ IMPORTANT : Un seuil trop bas (0.03) génère BEAUCOUP de faux positifs
-#    car il est trop proche des cases vides (~1%), détectant salissures et ombres
-
-AMC_PROP=0.8              # Proportion de la boîte à mesurer (0.8 = standard AMC)
-AMC_SEUIL=0.08           # Seuil de noirceur 8% (OPTIMAL : équilibre crayon léger vs faux positifs)
-AMC_BW_THRESHOLD=0.25    # Seuil de binarisation N&B (0.25 = réduit le bruit et artefacts)
-AMC_TOL_MARQUE=0.2       # Tolérance pour les marques de coin (0.2 = standard)
+# Paramètre SEUIL pour la notation (détection des cases cochées)
+# Basé sur l'ancien script qui fonctionnait bien
+AMC_SEUIL=0.15           # Seuil de noirceur 15% (TESTÉ et VALIDÉ)
 
 # ═══════════════════════════════════════════════════════════
 # GUIDE D'AJUSTEMENT SI NÉCESSAIRE :
 # ═══════════════════════════════════════════════════════════
 #
 # Si TROP de faux positifs (cases vides détectées) :
-#   → Augmenter AMC_SEUIL à 0.10 ou 0.12
+#   → Augmenter AMC_SEUIL à 0.18 ou 0.20
 #
 # Si PAS ASSEZ de détection (crayon très léger non détecté) :
-#   → Réduire AMC_SEUIL à 0.06
-#   → Réduire AMC_BW_THRESHOLD à 0.20
+#   → Réduire AMC_SEUIL à 0.12 ou 0.10
 #
-# Pour PHOTOCOPIES de mauvaise qualité :
-#   → AMC_PROP=0.65
-#   → AMC_SEUIL=0.10
-#   → AMC_TOL_MARQUE=0.3
-#   → AMC_BW_THRESHOLD=0.30
-#
-# Pour STYLO UNIQUEMENT (pas de crayon) :
-#   → AMC_SEUIL=0.12
-#   → AMC_BW_THRESHOLD=0.30
+# Valeurs courantes :
+#   • 0.10 : Très sensible (détecte crayon très léger, risque faux positifs)
+#   • 0.15 : Standard (bon équilibre) ✅ RECOMMANDÉ
+#   • 0.20 : Conservateur (stylo seulement, évite faux positifs)
 #
 # ═══════════════════════════════════════════════════════════
 
@@ -135,7 +117,7 @@ echo "  0) Quitter"
 echo ""
 echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
 echo ""
-echo "📊 Paramètres actuels : SEUIL=$AMC_SEUIL, BW_THRESHOLD=$AMC_BW_THRESHOLD"
+echo "📊 Seuil de notation actuel : $AMC_SEUIL (15% = standard)"
 echo ""
 read -p "Votre choix (1/2/3/4/5/6/0) : " choix
 echo ""
@@ -234,86 +216,33 @@ case $choix in
 esac
 
 # ============================================
-# FONCTION : VALIDATION QUALITÉ DES SCANS
-# ============================================
-validate_scan_quality() {
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo "🔍 VALIDATION QUALITÉ DES SCANS"
-    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-    echo ""
-
-    QUALITY_OK=true
-    WARNINGS=0
-
-    # Vérifier chaque PNG
-    for img in scans/*.png; do
-        if [ -f "$img" ]; then
-            filename=$(basename "$img")
-
-            # Vérifier la résolution avec identify (ImageMagick)
-            if command -v identify >/dev/null 2>&1; then
-                resolution=$(identify -format "%x %y" "$img" 2>/dev/null | awk '{print $1}')
-                width=$(identify -format "%w" "$img" 2>/dev/null)
-                height=$(identify -format "%h" "$img" 2>/dev/null)
-
-                # Convertir la résolution en DPI (si en PixelsPerCentimeter)
-                if [ -n "$resolution" ]; then
-                    dpi=$(echo "$resolution" | awk '{print int($1 * 2.54)}')
-
-                    if [ "$dpi" -lt 200 ]; then
-                        echo "  ⚠️  $filename : Résolution faible ($dpi DPI)"
-                        echo "      → Recommandé : 300 DPI minimum"
-                        QUALITY_OK=false
-                        WARNINGS=$((WARNINGS + 1))
-                    else
-                        echo "  ✓ $filename : ${dpi} DPI, ${width}x${height}px"
-                    fi
-                fi
-            fi
-
-            # Vérifier la taille du fichier
-            filesize=$(stat -f%z "$img" 2>/dev/null || stat -c%s "$img" 2>/dev/null)
-            if [ "$filesize" -lt 100000 ]; then
-                echo "  ⚠️  $filename : Fichier très petit ($filesize octets)"
-                echo "      → Possible problème de qualité"
-                WARNINGS=$((WARNINGS + 1))
-            fi
-        fi
-    done
-
-    echo ""
-    if [ "$QUALITY_OK" = false ]; then
-        echo "⚠️  ATTENTION : $WARNINGS avertissement(s) de qualité détecté(s)"
-        echo ""
-        echo "Recommandations :"
-        echo "  • Scannez à 300 DPI minimum"
-        echo "  • Utilisez le mode 'Noir et Blanc' (pas niveaux de gris)"
-        echo "  • Évitez les compressions JPG"
-        echo ""
-        read -p "Continuer malgré les avertissements ? (o/n) " continue_anyway
-        if [ "$continue_anyway" != "o" ]; then
-            echo "Arrêt du traitement."
-            exit 1
-        fi
-    else
-        echo "✅ Qualité des scans validée"
-    fi
-    echo ""
-}
-
-# ============================================
-# OPTION 5 : DIAGNOSTIC QUALITÉ
+# OPTION 5 : DIAGNOSTIC QUALITÉ (simplifié)
 # ============================================
 if [ "$choix" = "5" ]; then
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo "🔧 DIAGNOSTIC QUALITÉ DES SCANS"
+    echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
+    echo ""
+
     if [ ! -d "scans" ] || [ $(ls -1 scans/*.png 2>/dev/null | wc -l) -eq 0 ]; then
         echo "❌ Aucun scan PNG trouvé dans scans/"
         read -p "Appuyez sur Entrée pour fermer..."
         exit 1
     fi
 
-    validate_scan_quality
+    NB_SCANS=$(ls -1 scans/*.png 2>/dev/null | wc -l)
+    echo "📊 Nombre de scans : $NB_SCANS"
+    echo ""
 
-    read -p "✅ Diagnostic terminé. Appuyez sur Entrée pour fermer..."
+    echo "Recommandations pour des scans optimaux :"
+    echo "  • Résolution : 300 DPI minimum"
+    echo "  • Format : PNG ou PDF"
+    echo "  • Mode : Noir et Blanc (de préférence)"
+    echo "  • Les 4 marques de coin doivent être visibles"
+    echo "  • Impression à 100% (pas de réduction)"
+    echo ""
+
+    read -p "✅ Appuyez sur Entrée pour fermer..."
     exit 0
 fi
 
@@ -375,139 +304,39 @@ if [ "$choix" = "2" ] || [ "$choix" = "4" ]; then
     echo "  ✓ Scans détectés : $NB_SCANS fichiers"
     echo ""
 
-    # ──────────────────────────────────────────
-    # CONVERSION PDF → PNG OPTIMISÉE
-    # ──────────────────────────────────────────
+    echo "🔍 Analyse automatique des copies..."
+    echo ""
+
+    # Convertir les PDF en PNG si nécessaire (certains PDF posent problème à AMC)
     if ls scans/*.pdf >/dev/null 2>&1; then
-        echo "📄→🖼️  Conversion PDF → PNG optimisée (300 DPI, N&B)..."
-        echo ""
+        echo "  📄→🖼️  Conversion PDF en PNG pour compatibilité..."
         for pdf in scans/*.pdf; do
             if [ -f "$pdf" ]; then
-                basename_pdf=$(basename "$pdf" .pdf)
-                echo "  • Conversion de $basename_pdf.pdf..."
-
-                # Conversion optimisée avec pdftoppm
-                # -r 300 : 300 DPI
-                # -png : Format PNG
-                # -mono : Noir et Blanc (recommandé par AMC)
-                pdftoppm -png -r 300 -mono "$pdf" "scans/${basename_pdf}" >/dev/null 2>&1
-
-                if [ $? -eq 0 ]; then
-                    rm "$pdf"  # Supprimer le PDF après conversion réussie
-                    echo "    ✓ Converti en N&B 300 DPI"
-                else
-                    echo "    ⚠️  Erreur de conversion, utilisation du PDF original"
-                fi
+                pdftoppm -png -r 300 "$pdf" "${pdf%.pdf}" >/dev/null 2>&1
+                rm "$pdf"  # Supprimer le PDF après conversion
             fi
         done
+        echo "  ✓ Conversion terminée"
         echo ""
     fi
 
-    # ──────────────────────────────────────────
-    # VALIDATION QUALITÉ
-    # ──────────────────────────────────────────
-    validate_scan_quality
-
-    # ──────────────────────────────────────────
-    # ANALYSE AVEC PARAMÈTRES OPTIMAUX
-    # ──────────────────────────────────────────
-    echo "🔍 Analyse automatique des copies avec paramètres optimaux..."
-    echo ""
-    echo "Paramètres utilisés :"
-    echo "  • Proportion boîte (--prop) : $AMC_PROP"
-    echo "  • Seuil noirceur (--seuil) : $AMC_SEUIL"
-    echo "  • Seuil N&B (--bw-threshold) : $AMC_BW_THRESHOLD"
-    echo "  • Tolérance marques (--tol-marque) : $AMC_TOL_MARQUE"
-    echo ""
-
-    # Analyser les scans avec TOUS les paramètres optimaux
+    # Analyser les scans SANS paramètres supplémentaires (comme l'ancien script)
     auto-multiple-choice analyse \
         --data data \
         --cr cr \
-        --prop "$AMC_PROP" \
-        --bw-threshold "$AMC_BW_THRESHOLD" \
-        --tol-marque "$AMC_TOL_MARQUE" \
-        --try-three \
-        --debug-image-dir cr/debug \
-        scans/*.png scans/*.jpg 2>&1 | tee /tmp/amc_analyse.log | grep -E "(Processing|Analyzing|Done|copies|page)" | tail -15
+        scans/*.png scans/*.jpg 2>&1 | grep -E "(Processing|Analyzing|Done|copies)" | tail -10
 
     echo ""
 
-    # ──────────────────────────────────────────
-    # VÉRIFICATION ET RAPPORT DIAGNOSTIC
-    # ──────────────────────────────────────────
+    # Vérifier l'analyse
     NB_COPIES=$(sqlite3 "data/capture.sqlite" "SELECT COUNT(DISTINCT student) FROM capture_page WHERE copy=0;" 2>/dev/null)
     NB_COPIES=${NB_COPIES:-0}  # Défaut à 0 si vide
 
     if [ "$NB_COPIES" -gt 0 ]; then
         echo "✅ $NB_COPIES copies analysées"
-
-        # Générer un rapport de diagnostic
-        echo ""
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo "📊 RAPPORT DIAGNOSTIC"
-        echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-        echo ""
-
-        # Vérifier les erreurs potentielles
-        if [ -f "/tmp/amc_analyse.log" ]; then
-            nb_warnings=$(grep -i "warning" /tmp/amc_analyse.log | wc -l | tr -d ' ')
-            nb_errors=$(grep -i "error" /tmp/amc_analyse.log | wc -l | tr -d ' ')
-
-            if [ "$nb_warnings" -gt 0 ]; then
-                echo "⚠️  Avertissements détectés : $nb_warnings"
-                echo "    Consultez cr/debug/ pour les images de diagnostic"
-                echo ""
-            fi
-
-            if [ "$nb_errors" -gt 0 ]; then
-                echo "❌ Erreurs détectées : $nb_errors"
-                echo ""
-                echo "Solutions possibles :"
-                echo "  1. Vérifiez que les 4 marques de coin sont visibles"
-                echo "  2. Vérifiez l'échelle d'impression (doit être 100%)"
-                echo "  3. Augmentez --tol-marque à 0.3 (photocopies)"
-                echo "  4. Consultez les logs : /tmp/amc_analyse.log"
-                echo ""
-            fi
-        fi
-
-        # Statistiques sur les pages
-        nb_pages=$(sqlite3 "data/capture.sqlite" "SELECT COUNT(*) FROM capture_page WHERE copy=0;" 2>/dev/null)
-        echo "Pages analysées : $nb_pages"
-
-        # Vérifier s'il y a des copies avec problèmes
-        nb_problematic=$(sqlite3 "data/capture.sqlite" "SELECT COUNT(DISTINCT student) FROM capture_page WHERE timestamp_auto=0 AND copy=0;" 2>/dev/null)
-        if [ "$nb_problematic" -gt 0 ]; then
-            echo ""
-            echo "⚠️  Copies avec problèmes potentiels : $nb_problematic"
-            echo "    → Vérifiez manuellement dans AMC (onglet 'Saisie')"
-        fi
-
-        echo ""
-        echo "💡 Images de diagnostic disponibles dans : cr/debug/"
-        echo "   Consultez-les si vous avez des doutes sur la détection"
-        echo ""
-
     else
         echo "❌ Aucune copie analysée"
-        echo ""
-        echo "🔧 DÉPANNAGE :"
-        echo ""
-        echo "1. Vérifiez que le layout a été généré :"
-        echo "   → Dossier data/ doit contenir layout.xml"
-        echo ""
-        echo "2. Vérifiez vos scans :"
-        echo "   → 4 marques de coin visibles"
-        echo "   → Impression à 100% (pas de réduction)"
-        echo "   → Images en N&B 300 DPI"
-        echo ""
-        echo "3. Consultez les logs : /tmp/amc_analyse.log"
-        echo ""
-        echo "4. Si photocopies, modifiez les paramètres en haut du script :"
-        echo "   AMC_PROP=0.65"
-        echo "   AMC_TOL_MARQUE=0.3"
-        echo ""
+        echo "   Vérifiez vos scans dans scans/"
         read -p "Appuyez sur Entrée pour fermer..."
         exit 1
     fi
@@ -576,7 +405,7 @@ if [ "$choix" = "2" ] || [ "$choix" = "3" ] || [ "$choix" = "4" ]; then
     echo ""
 
     # ──────────────────────────────────────────
-    # 3.2 - NOTATION AVEC SEUIL OPTIMAL
+    # 3.2 - NOTATION
     # ──────────────────────────────────────────
     echo "📊 3.2 - Calcul des notes"
 
@@ -594,14 +423,12 @@ if [ "$choix" = "2" ] || [ "$choix" = "3" ] || [ "$choix" = "4" ]; then
         --n-copies 0 \
         "$TEX_FILE" >/dev/null 2>&1
 
-    # Puis calculer les notes avec le seuil configuré
+    # Puis calculer les notes avec le seuil (0.15 comme l'ancien script qui fonctionnait)
     auto-multiple-choice note \
         --data data \
-        --seuil "$AMC_SEUIL" \
-        --grain 0.5 \
-        --arrondi n 2>&1 | grep -v "SQL" | tail -5
+        --seuil "$AMC_SEUIL" 2>&1 | grep -v "SQL" | tail -5
 
-    echo "  ✅ Notes calculées (seuil : $AMC_SEUIL)"
+    echo "  ✅ Notes calculées"
     echo ""
 
     # ──────────────────────────────────────────
@@ -774,14 +601,13 @@ RENAME_SCRIPT
     echo ""
 
     # ──────────────────────────────────────────
-    # RAPPORT FINAL DÉTAILLÉ
+    # RAPPORT FINAL
     # ──────────────────────────────────────────
     cat > exports/RAPPORT.txt <<EOF
 ═══════════════════════════════════════════════════════════
-RAPPORT AMC - VERSION OPTIMISÉE
+RAPPORT AMC - $(date "+%Y-%m-%d %H:%M:%S")
 ═══════════════════════════════════════════════════════════
 
-Date : $(date "+%Y-%m-%d %H:%M:%S")
 Projet : $(basename "$(pwd)")
 Fichier : $TEX_FILE
 
@@ -792,25 +618,14 @@ Fichier : $TEX_FILE
 Copies analysées : $NB_COPIES
 PDFs générés : $nb_pdf
 
-⚙️  PARAMÈTRES UTILISÉS :
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-Proportion boîte (--prop) : $AMC_PROP
-Seuil noirceur (--seuil) : $AMC_SEUIL
-Seuil N&B (--bw-threshold) : $AMC_BW_THRESHOLD
-Tolérance marques (--tol-marque) : $AMC_TOL_MARQUE
-
-📂 FICHIERS GÉNÉRÉS :
+📂 FICHIERS :
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ✓ exports/notes_avec_noms.csv
-  → Fichier Excel avec noms et notes détaillées
+  → Fichier Excel avec noms et notes
 
 ✓ exports/copies_individuelles/
-  → $nb_pdf PDFs annotés avec corrections
-
-✓ cr/debug/
-  → Images de diagnostic pour vérification
+  → $nb_pdf PDFs annotés
 
 ═══════════════════════════════════════════════════════════
 EOF
@@ -888,12 +703,12 @@ if [ "$choix" = "6" ]; then
     # Créer un dossier de test
     mkdir -p tests_parametres
 
-    # Définir les configurations à tester
+    # Définir les configurations à tester (seuils de notation)
     declare -a CONFIGS=(
-        "0.08|0.25|RECOMMANDÉ (optimal)"
-        "0.06|0.20|CRAYON TRÈS LÉGER"
-        "0.10|0.25|CONSERVATEUR"
-        "0.12|0.30|STYLO SEULEMENT"
+        "0.15|STANDARD (actuel)"
+        "0.12|SENSIBLE (+ détection)"
+        "0.10|TRÈS SENSIBLE (crayon léger)"
+        "0.18|CONSERVATEUR (- faux positifs)"
     )
 
     BEST_CONFIG=""
@@ -902,12 +717,11 @@ if [ "$choix" = "6" ]; then
 
     for config in "${CONFIGS[@]}"; do
         SEUIL=$(echo "$config" | cut -d'|' -f1)
-        BW=$(echo "$config" | cut -d'|' -f2)
-        DESC=$(echo "$config" | cut -d'|' -f3)
+        DESC=$(echo "$config" | cut -d'|' -f2)
 
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo "TEST $CONFIG_NUM : $DESC"
-        echo "  Seuil=$SEUIL, BW_Threshold=$BW"
+        echo "  Seuil de notation = $SEUIL"
         echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
         echo ""
 
@@ -918,27 +732,12 @@ if [ "$choix" = "6" ]; then
         # Copier les bases de données
         cp -r data "$TEST_DIR/data_test"
 
-        # Réinitialiser les captures
-        rm -f "$TEST_DIR/data_test/capture.sqlite" 2>/dev/null
-        cp data/capture.sqlite "$TEST_DIR/data_test/" 2>/dev/null
+        # Recalculer les notes avec ce seuil (l'analyse reste la même)
+        echo "🔍 Calcul des notes avec seuil $SEUIL..."
 
-        # Analyser avec ces paramètres
-        echo "🔍 Analyse en cours..."
-        auto-multiple-choice analyse \
-            --data "$TEST_DIR/data_test" \
-            --cr "$TEST_DIR/cr" \
-            --prop 0.8 \
-            --bw-threshold "$BW" \
-            --tol-marque 0.2 \
-            --try-three \
-            scans/*.png 2>&1 | grep -E "(Processing|Done)" | tail -3
-
-        # Recalculer les notes
         auto-multiple-choice note \
             --data "$TEST_DIR/data_test" \
-            --seuil "$SEUIL" \
-            --grain 0.5 \
-            --arrondi n >/dev/null 2>&1
+            --seuil "$SEUIL" >/dev/null 2>&1
 
         # Extraire les statistiques
         STATS=$(sqlite3 "$TEST_DIR/data_test/scoring.sqlite" "
@@ -962,7 +761,7 @@ if [ "$choix" = "6" ]; then
         # Garder la meilleure config
         if [ "$AVG" -gt "$BEST_AVG_SCORE" ]; then
             BEST_AVG_SCORE=$AVG
-            BEST_CONFIG="$DESC (Seuil=$SEUIL, BW=$BW)"
+            BEST_CONFIG="$DESC (Seuil=$SEUIL)"
         fi
 
         CONFIG_NUM=$((CONFIG_NUM + 1))
