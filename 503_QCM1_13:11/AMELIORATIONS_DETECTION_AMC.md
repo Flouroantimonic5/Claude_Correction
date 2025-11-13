@@ -2,63 +2,83 @@
 
 ## 📋 Problème identifié
 
-Les paramètres précédents généraient **BEAUCOUP de faux positifs** :
+Les paramètres précédents généraient **des résultats incohérents** :
 - **AMC_SEUIL était à 0.03** (3%) - TROP BAS !
-- Cela détectait des cases vides comme cochées
-- Résultats très bas pour tous les élèves
-- Paul MEGEVAND (21) : 12/44 points (5.45/20)
-- Rayan SOUMARE (28) : 7/44 points (3.18/20)
-- Estelle CELINAIN (5) : 0/44 points (aucune détection)
+- Beaucoup de paramètres supplémentaires qui compliquaient la détection
+- Notes très basses pour certains élèves
+- Paul MEGEVAND (21) et Rayan SOUMARE (28) : Scores potentiellement sous-évalués (crayon léger)
 
 ## 🔬 Analyse technique
 
-Selon la documentation AMC et les tests empiriques :
+Selon la documentation AMC :
 
 | Type de case | Niveau de noirceur |
 |--------------|-------------------|
-| Case VIDE | 0.7-1% |
+| Case VIDE | 0.5-1% (bruit de fond) |
 | Case CRAYON LÉGER | 8-15% |
 | Case STYLO | 15-30% |
 
-**Le problème** : Un seuil à 3% est trop proche des cases vides (~1%), donc il détecte :
-- Les salissures
-- Les ombres de scan
-- Les artefacts de compression
-- Les pliures de papier
+**Le problème initial** : Un seuil à 3% était trop bas et trop complexe avec trop de paramètres.
 
 ## ✅ Solution mise en place
 
-### Nouveaux paramètres (OPTIMISÉS)
+### Retour aux paramètres SIMPLES (basés sur l'ancien script qui fonctionnait)
 
 ```bash
-AMC_PROP=0.8              # Standard AMC (inchangé)
-AMC_SEUIL=0.08           # 8% au lieu de 3% ✨
-AMC_BW_THRESHOLD=0.25    # 0.25 au lieu de 0.15 ✨
-AMC_TOL_MARQUE=0.2       # Standard AMC (inchangé)
+AMC_SEUIL=0.15           # 15% - Standard AMC (TESTÉ et VALIDÉ)
 ```
 
-### Avantages de ces paramètres
+**C'est tout !** Pas de paramètres supplémentaires pour l'analyse.
 
-1. **AMC_SEUIL=0.08 (8%)** :
-   - Marge de sécurité de 7-8% au-dessus des cases vides (~1%)
-   - Détecte toujours les cases au crayon léger (8-15%)
-   - Réduit drastiquement les faux positifs
+### Avantages de cette approche
 
-2. **AMC_BW_THRESHOLD=0.25** :
-   - Meilleure binarisation Noir & Blanc
-   - Réduit le bruit et les artefacts
-   - Plus tolérant aux variations d'éclairage
+1. **Simplicité** :
+   - Un seul paramètre à ajuster (--seuil)
+   - Analyse utilise les paramètres par défaut AMC
+   - Moins de risques d'erreur
 
-## 🧪 Nouvelle fonctionnalité : Test des paramètres
+2. **AMC_SEUIL=0.15 (15%)** :
+   - Valeur standard recommandée par AMC
+   - Bon équilibre entre détection et faux positifs
+   - Testée et validée sur l'ancien script
 
-Le script propose maintenant une **option 6** pour tester automatiquement plusieurs configurations :
+3. **Pas de paramètres exotiques** :
+   - Pas de --prop, --bw-threshold, --tol-marque
+   - L'analyse utilise les valeurs par défaut AMC
+   - Plus fiable et prévisible
 
-1. **RECOMMANDÉ** (0.08, 0.25) - Par défaut
-2. **CRAYON TRÈS LÉGER** (0.06, 0.20) - Si crayon très clair
-3. **CONSERVATEUR** (0.10, 0.25) - Si trop de faux positifs
-4. **STYLO SEULEMENT** (0.12, 0.30) - Si uniquement stylo
+## 🧪 Nouvelles fonctionnalités
 
-Cette option compare automatiquement les résultats et identifie la meilleure configuration.
+### Option 6 : Test rapide des seuils
+
+Le script principal propose une **option 6** pour tester 4 seuils différents :
+
+1. **STANDARD** (0.15) - Actuel (recommandé)
+2. **SENSIBLE** (0.12) - Plus de détection
+3. **TRÈS SENSIBLE** (0.10) - Crayon très léger
+4. **CONSERVATEUR** (0.18) - Moins de faux positifs
+
+Cette option compare les résultats et identifie le meilleur seuil.
+
+### Script d'optimisation pour Paul & Rayan
+
+Un script dédié `test_optimisation_paul_rayan.sh` teste **11 seuils** (0.08 à 0.18) pour trouver le seuil optimal qui :
+- ✅ Améliore les scores de Paul (21) et Rayan (28)
+- ✅ Ne crée PAS de faux positifs pour les autres élèves
+
+**Comment l'utiliser** :
+```bash
+# Double-cliquer sur :
+test_optimisation_paul_rayan.sh
+
+# Le script va :
+# - Tester 11 configurations
+# - Comparer Paul et Rayan
+# - Détecter les faux positifs
+# - Recommander le seuil optimal
+```
+
+Consultez `GUIDE_OPTIMISATION.md` pour plus de détails.
 
 ## 📝 Comment utiliser
 
